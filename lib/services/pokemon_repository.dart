@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import '../models/pokemon.dart';
 
@@ -10,12 +12,41 @@ class PokeApiException implements Exception {
 }
 
 class PokemonRepository {
-  PokemonRepository({http.Client? client}) : _client = client ?? http.Client();
+  PokemonRepository({
+    http.Client? client,
+    Future<String> Function()? catalogLoader,
+  }) : _client = client ?? http.Client(),
+       _catalogLoader =
+           catalogLoader ??
+           (() => rootBundle.loadString('assets/data/catalog.json'));
   final http.Client _client;
-  final _pokemon = <int, Future<Pokemon>>{};
+  final Future<String> Function() _catalogLoader;
+  Future<Map<int, Pokemon>>? _catalog;
   final _types = <String, Future<Set<int>>>{};
   final _descriptions = <String, Future<String>>{};
-  static const _base = 'https://pokeapi.co/api/v2';
+
+  Future<Map<int, Pokemon>> _loadCatalog() => _catalog ??= () async {
+    try {
+      final data = jsonDecode(await _catalogLoader()) as Map<String, dynamic>;
+      if (data['version'] != 1) {
+        throw const FormatException('Unsupported catalog');
+      }
+      return {
+        for (final row in data['rows'] as List)
+          row[0] as int: Pokemon.fromCompact(
+            row as List<dynamic>,
+            thumbnail: kIsWeb
+                ? Uri.base.resolve('lite/sprites/${row[0]}.png').toString()
+                : null,
+          ),
+      };
+    } catch (_) {
+      _catalog = null;
+      throw const PokeApiException(
+        'No pudimos abrir el catálogo. Vuelve a cargar la Pokédex.',
+      );
+    }
+  }();
 
   Future<Map<String, dynamic>> _get(String url) async {
     try {
@@ -39,31 +70,26 @@ class PokemonRepository {
   }
 
   Future<List<PokemonEntry>> fetchIndex() async {
-    final data = await _get('$_base/pokemon?limit=20000');
-    // Alternate forms are excluded from the national Pokédex and generations.
-    return (data['results'] as List)
-        .map((p) => PokemonEntry.fromJson(p as Map<String, dynamic>))
-        .where((p) => p.id <= 1025)
+    final catalog = await _loadCatalog();
+    return catalog.values
+        .map((p) => PokemonEntry(id: p.id, name: p.name))
         .toList();
   }
 
-  Future<Pokemon> fetchPokemon(int id) => _pokemon.putIfAbsent(id, () async {
-    try {
-      return Pokemon.fromJson(await _get('$_base/pokemon/$id'));
-    } catch (_) {
-      _pokemon.remove(id);
-      rethrow;
+  Future<Pokemon> fetchPokemon(int id) async {
+    final pokemon = (await _loadCatalog())[id];
+    if (pokemon == null) {
+      throw const PokeApiException('Este Pokémon no está en el catálogo.');
     }
-  });
+    return pokemon;
+  }
 
   Future<Set<int>> fetchType(String type) => _types.putIfAbsent(type, () async {
     try {
-      final data = await _get('$_base/type/$type');
-      return (data['pokemon'] as List)
-          .map(
-            (p) =>
-                PokemonEntry.fromJson(p['pokemon'] as Map<String, dynamic>).id,
-          )
+      final catalog = await _loadCatalog();
+      return catalog.values
+          .where((p) => p.types.contains(type))
+          .map((p) => p.id)
           .toSet();
     } catch (_) {
       _types.remove(type);

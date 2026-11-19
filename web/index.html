@@ -26,32 +26,31 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Pokédex">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/pokedex-180-v2.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/pokedex-32-v2.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/pokedex-192-v2.png">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="favicon.svg?v=2">
 
   <title>Pokédex · Tu próxima aventura</title>
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="manifest.json?v=2">
+  <style>
+    html, body { margin: 0; background: #f7f8fa; color-scheme: light; }
+  </style>
 </head>
 <body>
-  <div id="loading" role="status" aria-label="Cargando Pokédex" style="position:fixed;inset:0;display:grid;place-content:center;gap:18px;text-align:center;background:#f7f8fa;font:15px system-ui;color:#8b929d">
+  <div id="loading" role="status" aria-label="Cargando Pokédex" style="position:fixed;top:0;right:0;bottom:0;left:0;display:grid;place-content:center;gap:18px;text-align:center;background:#f7f8fa;font:15px system-ui;color:#8b929d">
     <img src="favicon.svg" width="48" height="48" alt="" style="margin:auto">
     Preparando tu próxima aventura…
   </div>
   <script>
     window.addEventListener('flutter-first-frame', function () {
-      document.getElementById('loading')?.remove();
+      var loading = document.getElementById('loading');
+      if (loading) loading.remove();
     });
   </script>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
-
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
-  <script src="flutter_bootstrap.js" async></script>
+  <noscript>Activa JavaScript para usar la búsqueda de la Pokédex.</noscript>
+  <script src="app-loader.js?v=__POKEDEX_BUILD__" defer></script>
 </body>
 </html>

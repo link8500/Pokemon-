@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../controllers/pokedex_controller.dart';
 import '../models/pokemon.dart';
@@ -453,8 +454,9 @@ class _PokedexScreenState extends State<PokedexScreen> {
               child: Transform.rotate(
                 angle: -0.10,
                 child: PokemonArtwork(
-                  url:
-                      'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png',
+                  url: kIsWeb
+                      ? Uri.base.resolve('lite/pikachu.webp').toString()
+                      : 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png',
                   name: 'Pikachu',
                   size: artworkSize,
                 ),

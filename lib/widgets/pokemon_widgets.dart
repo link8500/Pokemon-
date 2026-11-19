@@ -219,20 +219,8 @@ class PokemonArtwork extends StatelessWidget {
       fit: BoxFit.contain,
       semanticLabel: name,
       errorBuilder: (_, _, _) => fallback(),
-      loadingBuilder: (context, child, progress) => progress == null
-          ? child
-          : SizedBox.square(
-              dimension: size,
-              child: const Center(
-                child: SizedBox.square(
-                  dimension: 22,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Color(0xFFBCC3CC),
-                  ),
-                ),
-              ),
-            ),
+      loadingBuilder: (context, child, progress) =>
+          progress == null ? child : fallback(),
     );
   }
 }
@@ -314,7 +302,7 @@ class _PokemonCardState extends State<PokemonCard> {
                               scale: _hovered ? 1.07 : 1,
                               duration: const Duration(milliseconds: 220),
                               child: PokemonArtwork(
-                                url: p.image,
+                                url: p.thumbnail ?? p.image,
                                 name: p.displayName,
                               ),
                             ),

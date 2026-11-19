@@ -26,12 +26,14 @@ class Pokemon {
     required this.abilities,
     required this.stats,
     required this.speciesUrl,
+    this.thumbnail,
   });
   final int id;
   final String name;
   final List<String> types;
   final String? image;
   final String? shinyImage;
+  final String? thumbnail;
   final double height;
   final double weight;
   final List<String> abilities;
@@ -56,6 +58,7 @@ class Pokemon {
       shinyImage:
           artwork?['front_shiny'] as String? ??
           sprites['front_shiny'] as String?,
+      thumbnail: sprites['front_default'] as String?,
       height: (json['height'] as num) / 10,
       weight: (json['weight'] as num) / 10,
       abilities: (json['abilities'] as List)
@@ -66,6 +69,36 @@ class Pokemon {
           stat['stat']['name'] as String: stat['base_stat'] as int,
       },
       speciesUrl: json['species']['url'] as String,
+    );
+  }
+
+  factory Pokemon.fromCompact(List<dynamic> row, {String? thumbnail}) {
+    final id = row[0] as int;
+    const sprites =
+        'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
+    const statNames = [
+      'hp',
+      'attack',
+      'defense',
+      'special-attack',
+      'special-defense',
+      'speed',
+    ];
+    final values = (row[5] as List).cast<int>();
+    return Pokemon(
+      id: id,
+      name: row[1] as String,
+      types: (row[2] as List).cast<String>(),
+      image: '$sprites/other/official-artwork/$id.png',
+      shinyImage: '$sprites/other/official-artwork/shiny/$id.png',
+      thumbnail: thumbnail ?? '$sprites/$id.png',
+      height: (row[3] as num) / 10,
+      weight: (row[4] as num) / 10,
+      stats: {
+        for (var i = 0; i < statNames.length; i++) statNames[i]: values[i],
+      },
+      abilities: (row[6] as List).cast<String>(),
+      speciesUrl: 'https://pokeapi.co/api/v2/pokemon-species/${row[7]}/',
     );
   }
 }
